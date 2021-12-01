@@ -23,7 +23,7 @@ def initial_pos_pub():
 
     start_pos.pose.covariance[0] = 0.25
     start_pos.pose.covariance[7] = 0.25
-    start_pos.pose.covariance[1:7] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.25] 
+    start_pos.pose.covariance[1:7] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] # or 0.25
     start_pos.pose.covariance[8:34] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] 
     start_pos.pose.covariance[35] = 0.06853892326654787

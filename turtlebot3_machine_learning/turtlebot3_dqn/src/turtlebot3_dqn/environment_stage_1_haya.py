@@ -100,7 +100,7 @@ class Env():
         else:
             print("@@@@@@@@@@@@@")
 
-        min_range = 0.15 # 0.13
+        min_range = 0.13 # 0.13
         done = False
 
         for i in range(len(scan.ranges)):
@@ -115,11 +115,11 @@ class Env():
         obstacle_angle = np.argmin(scan_range)
 
         distance_between = math.sqrt((self.position1.x - self.position2.x) ** 2 + (self.position1.y - self.position2.y) ** 2)
-        # print(distance_between)
+        # print("distance: ", distance_between)
 
         if (min_range > min(scan_range) > 0) or distance_between < 0.21:
             done = True
-
+        # print("scan_range: ", min(scan_range))
         if scan_topic == "tb3_0/scan":
             current_distance = round(math.hypot(self.goal_x - self.position1.x, self.goal_y - self.position1.y),2)
         elif scan_topic == "tb3_1/scan":

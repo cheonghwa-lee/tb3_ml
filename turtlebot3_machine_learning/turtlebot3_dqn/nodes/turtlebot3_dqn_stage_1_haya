@@ -32,6 +32,7 @@ from keras.models import Sequential, load_model
 from keras.optimizers import RMSprop
 from keras.layers import Dense, Dropout, Activation
 
+# from random import choices
 
 EPISODES = 3000
 
@@ -50,7 +51,7 @@ class ReinforceAgent():
         self.target_update = 2000
         self.discount_factor = 0.99
         self.learning_rate = 0.00025
-        self.epsilon = 0.25 # 1.0
+        self.epsilon = 1.0 # 1.0
         self.epsilon_decay = 0.99
         self.epsilon_min = 0.05
         self.batch_size = 64
@@ -95,9 +96,14 @@ class ReinforceAgent():
         self.target_model.set_weights(self.model.get_weights())
 
     def getAction(self, state):
-        if np.random.rand() <= self.epsilon:
+        tlqkf1 = np.random.rand()
+        # print(tlqkf1<= self.epsilon)
+        if  tlqkf1 <= self.epsilon:
             self.q_value = np.zeros(self.action_size)
             return random.randrange(self.action_size)
+            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,1.0,0.0,0.0])
+            # print(tlqkf)
+            # return tlqkf
         else:
             q_value = self.model.predict(state.reshape(1, len(state)))
             self.q_value = q_value
@@ -138,7 +144,7 @@ class ReinforceAgent():
                 X_batch = np.append(X_batch, np.array([next_states.copy()]), axis=0)
                 Y_batch = np.append(Y_batch, np.array([[rewards] * self.action_size]), axis=0)
 
-        self.model.fit(X_batch, Y_batch, batch_size=self.batch_size, epochs=5, verbose=0)
+        self.model.fit(X_batch, Y_batch, batch_size=self.batch_size, epochs=1, verbose=0)
 
 if __name__ == '__main__':
     rospy.init_node('turtlebot3_dqn_stage_1')
@@ -180,6 +186,7 @@ if __name__ == '__main__':
         for t in range(agent1.episode_step):
             action1 = agent1.getAction(state1)
             action2 = agent2.getAction(state2)
+            # print(action1, action2)
 
             next_state1, reward1, done1 = env.step(action1, "tb3_0/scan")
             next_state2, reward2, done2 = env.step(action2, "tb3_1/scan")
@@ -230,6 +237,7 @@ if __name__ == '__main__':
                 done = True
 
             if done:
+                # time.sleep(1)
                 result.data = [score, (np.max(agent1.q_value) + np.max(agent2.q_value)) / 2]
                 result1.data = [score1, np.max(agent1.q_value)]
                 result2.data = [score2, np.max(agent2.q_value)]
