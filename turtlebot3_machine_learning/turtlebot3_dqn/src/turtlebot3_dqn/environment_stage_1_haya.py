@@ -34,15 +34,19 @@ class Env():
         self.goal_y = 0
         self.heading1 = 0
         self.heading2 = 0
+        self.heading3 = 0
         self.action_size = action_size
         self.initGoal = True
         self.get_goalbox = False
         self.position1 = Pose()
         self.position2 = Pose()
+        self.position3 = Pose()
         self.pub_cmd_vel1 = rospy.Publisher('tb3_0/cmd_vel', Twist, queue_size=5)
         self.sub_odom1 = rospy.Subscriber('tb3_0/odom', Odometry, self.getOdometry)
         self.pub_cmd_vel2 = rospy.Publisher('tb3_1/cmd_vel', Twist, queue_size=5)
         self.sub_odom2 = rospy.Subscriber('tb3_1/odom', Odometry, self.getOdometry)
+        self.pub_cmd_vel3 = rospy.Publisher('tb3_2/cmd_vel', Twist, queue_size=5)
+        self.sub_odom3 = rospy.Subscriber('tb3_2/odom', Odometry, self.getOdometry)
         self.reset_proxy = rospy.ServiceProxy('gazebo/reset_simulation', Empty)
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
@@ -53,6 +57,8 @@ class Env():
             goal_distance = round(math.hypot(self.goal_x - self.position1.x, self.goal_y - self.position1.y), 2)
         elif scan_topic == "tb3_1/scan":
             goal_distance = round(math.hypot(self.goal_x - self.position2.x, self.goal_y - self.position2.y), 2)
+        elif scan_topic == "tb3_2/scan":
+            goal_distance = round(math.hypot(self.goal_x - self.position3.x, self.goal_y - self.position3.y), 2)
         else:
             print("$%#$%GJDKAJFGLK")
 
@@ -63,6 +69,8 @@ class Env():
             self.position1 = odom.pose.pose.position
         elif odom.header.frame_id == "tb3_1/odom":
             self.position2 = odom.pose.pose.position
+        elif odom.header.frame_id == "tb3_2/odom":
+            self.position3 = odom.pose.pose.position
         else:
             print("rotlqkf")
 
@@ -74,6 +82,8 @@ class Env():
             goal_angle = math.atan2(self.goal_y - self.position1.y, self.goal_x - self.position1.x)
         elif odom.header.frame_id == "tb3_1/odom":
             goal_angle = math.atan2(self.goal_y - self.position2.y, self.goal_x - self.position2.x)
+        elif odom.header.frame_id == "tb3_2/odom":
+            goal_angle = math.atan2(self.goal_y - self.position3.y, self.goal_x - self.position3.x)
         else:
             print("##########################")
 
@@ -88,6 +98,8 @@ class Env():
             self.heading1 = round(heading, 2)
         elif odom.header.frame_id == "tb3_1/odom":
             self.heading2 = round(heading, 2)
+        elif odom.header.frame_id == "tb3_2/odom":
+            self.heading3 = round(heading, 2)
         else:
             print("tlqkflqjflkjdlkfjqlwdjkf")
 
@@ -97,6 +109,8 @@ class Env():
             heading = self.heading1
         elif scan_topic == "tb3_1/scan":
             heading = self.heading2
+        elif scan_topic == "tb3_2/scan":
+            heading = self.heading3
         else:
             print("@@@@@@@@@@@@@")
 
@@ -114,7 +128,10 @@ class Env():
         obstacle_min_range = round(min(scan_range), 2)
         obstacle_angle = np.argmin(scan_range)
 
-        distance_between = math.sqrt((self.position1.x - self.position2.x) ** 2 + (self.position1.y - self.position2.y) ** 2)
+        distance_between1 = math.sqrt((self.position1.x - self.position2.x) ** 2 + (self.position1.y - self.position2.y) ** 2)
+        distance_between2 = math.sqrt((self.position1.x - self.position3.x) ** 2 + (self.position1.y - self.position3.y) ** 2)
+        distance_between3 = math.sqrt((self.position3.x - self.position2.x) ** 2 + (self.position3.y - self.position2.y) ** 2)
+        distance_between = min(distance_between1, distance_between2, distance_between3)
         # print("distance: ", distance_between)
 
         if (min_range > min(scan_range) > 0) or distance_between < 0.21:
@@ -124,6 +141,8 @@ class Env():
             current_distance = round(math.hypot(self.goal_x - self.position1.x, self.goal_y - self.position1.y),2)
         elif scan_topic == "tb3_1/scan":
             current_distance = round(math.hypot(self.goal_x - self.position2.x, self.goal_y - self.position2.y),2)
+        elif scan_topic == "tb3_2/scan":
+            current_distance = round(math.hypot(self.goal_x - self.position3.x, self.goal_y - self.position3.y),2)
         else:
             print("&&&&&&&&&&&&&&&&")
 
@@ -152,6 +171,9 @@ class Env():
         elif scan_topic == "tb3_1/scan":
             # print('2')
             distance_rate = 2 ** (current_distance / self.goal_distance2)
+        elif scan_topic == "tb3_2/scan":
+            # print('2')
+            distance_rate = 2 ** (current_distance / self.goal_distance3)
         else:
             print("*********************")
 
@@ -170,6 +192,8 @@ class Env():
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
                 self.pub_cmd_vel2.publish(Twist())
+            elif scan_topic == "tb3_2/scan":
+                self.pub_cmd_vel3.publish(Twist())
             else:
                 print("77777777777777777777")
 
@@ -181,6 +205,8 @@ class Env():
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
                 self.pub_cmd_vel2.publish(Twist())
+            elif scan_topic == "tb3_2/scan":
+                self.pub_cmd_vel3.publish(Twist())
             else:
                 print("888888888888")
 
@@ -190,6 +216,8 @@ class Env():
                 self.goal_distance1 = self.getGoalDistace(scan_topic)
             elif scan_topic == "tb3_1/scan":
                 self.goal_distance2 = self.getGoalDistace(scan_topic)
+            elif scan_topic == "tb3_2/scan":
+                self.goal_distance3 = self.getGoalDistace(scan_topic)
             else:
                 print("(((((((((((((((((((((((")
 
@@ -209,6 +237,8 @@ class Env():
             self.pub_cmd_vel1.publish(vel_cmd)
         elif scan_topic == "tb3_1/scan":
             self.pub_cmd_vel2.publish(vel_cmd)
+        elif scan_topic == "tb3_2/scan":
+            self.pub_cmd_vel3.publish(vel_cmd)
         else:
             print("tlqkf")
 
@@ -243,6 +273,12 @@ class Env():
                 data2 = rospy.wait_for_message("tb3_1/scan", LaserScan, timeout=5)
             except:
                 pass
+        data3 = None
+        while data3 is None:
+            try:
+                data3 = rospy.wait_for_message("tb3_2/scan", LaserScan, timeout=5)
+            except:
+                pass
 
         if self.initGoal:
             self.goal_x, self.goal_y = self.respawn_goal.getPosition()
@@ -252,10 +288,12 @@ class Env():
         self.goal_distance1 = self.getGoalDistace("tb3_0/scan")
         # elif scan_topic == "tb3_1/scan":
         self.goal_distance2 = self.getGoalDistace("tb3_1/scan")
+        self.goal_distance3 = self.getGoalDistace("tb3_2/scan")
         # else:
             # print("))))))))))))")
 
         state1, done1 = self.getState(data1, "tb3_0/scan")
         state2, done2 = self.getState(data2, "tb3_1/scan")
+        state3, done3 = self.getState(data3, "tb3_2/scan")
 
-        return np.asarray(state1), np.asarray(state2)
+        return np.asarray(state1), np.asarray(state2), np.asarray(state3)
