@@ -53,6 +53,15 @@ class Env():
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
         self.respawn_goal = Respawn()
+        self.cmd_vel1 = 0.15
+        self.cmd_vel2 = 0.15
+        self.cmd_vel3 = 0.15
+        self.ang_vel1 = 0
+        self.ang_vel2 = 0
+        self.ang_vel3 = 0
+        self.goal_y1 = 0.15
+        self.goal_y2 = -0.15
+        self.goal_y3 = 0.15
 
     def getGoalDistace(self, scan_topic):
         if scan_topic == "tb3_0/scan":
@@ -90,6 +99,8 @@ class Env():
             print("##########################")
 
         heading = goal_angle - yaw
+        # print(heading, goal_angle, yaw)
+
         if heading > pi:
             heading -= 2 * pi
 
@@ -119,6 +130,7 @@ class Env():
         min_range = 0.13 # 0.13
         done = False
 
+        # print(scan_topic, scan.ranges)
         for i in range(len(scan.ranges)):
             if scan.ranges[i] == float('Inf'):
                 scan_range.append(3.5)
@@ -136,9 +148,56 @@ class Env():
         distance_between = min(distance_between1, distance_between2, distance_between3)
         # print("distance: ", distance_between)
 
-        print(self.position1.y, self.position2.y, self.position3.y)
+        # print(self.position1.y, self.position2.y, self.position3.y)
+        # print("1")
+        # print(self.position1.x - self.position2.x, self.position1.y - self.position2.y)
+        # print(self.position1.x - self.position3.x, self.position1.y - self.position3.y)
+        # print("2")
+        # print(self.position2.x - self.position1.x, self.position2.y - self.position1.y)
+        # print(self.position2.x - self.position3.x, self.position2.y - self.position3.y)
+        # print("3")
+        # print(self.position3.x - self.position1.x, self.position3.y - self.position1.y)
+        # print(self.position3.x - self.position2.x, self.position3.y - self.position2.y)
+        state_rl = []
+        if scan_topic == "tb3_0/scan":
+            x12 = self.position1.x - self.position2.x
+            y12 = self.position1.y - self.position2.y
+            h12 = self.heading1 - self.heading2
+            x13 = self.position1.x - self.position3.x
+            y13 = self.position1.y - self.position3.y
+            h13 = self.heading1 - self.heading3
+            py = self.position1.y
+            ph = self.heading1
+            state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
+        elif scan_topic == "tb3_1/scan":
+            x21 = self.position2.x - self.position1.x
+            y21 = self.position2.y - self.position1.y
+            h21 = self.heading2 - self.heading1
+            x23 = self.position2.x - self.position3.x
+            y23 = self.position2.y - self.position3.y
+            h23 = self.heading2 - self.heading3
+            py = self.position2.y
+            ph = self.heading2
+            state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
+        elif scan_topic == "tb3_2/scan":
+            x31 = self.position3.x - self.position1.x
+            y31 = self.position3.y - self.position1.y
+            h31 = self.heading3 - self.heading1
+            x32 = self.position3.x - self.position2.x
+            y32 = self.position3.y - self.position2.y
+            h32 = self.heading3 - self.heading2
+            py = self.position3.y
+            ph = self.heading3
+            state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
+        else:
+            print("&&&&&&&&&&&&&&&&")
 
-        if (min_range > min(scan_range) > 0) or distance_between < 0.21:
+        exit1 = self.position1.y<-0.25 or self.position1.y>0.25
+        exit2 = self.position2.y<-0.25 or self.position2.y>0.25
+        exit3 = self.position3.y<-0.25 or self.position3.y>0.25
+        exit_ = exit1 or exit2 or exit3
+
+        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_:
             done = True
         # print("scan_range: ", min(scan_range))
         if scan_topic == "tb3_0/scan":
@@ -153,7 +212,8 @@ class Env():
         if current_distance < 0.2:
             self.get_goalbox = True
 
-        return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
+        # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
+        return [0, 0] + state_rl, done
 
     def setReward(self, state, done, action, scan_topic):
         yaw_reward = []
@@ -186,8 +246,22 @@ class Env():
         else:
             ob_reward = 0
 
-        reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
+        # reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
         # print(reward)
+
+        # reward = 10
+
+        if scan_topic == "tb3_0/scan":
+            self.reward1 = self.position1.x
+            reward = self.reward1 * 10 - abs(self.position1.y - 0.15) * 100
+        elif scan_topic == "tb3_1/scan":
+            self.reward2 = self.position2.x
+            reward = self.reward2 * 10 - abs(self.position3.y - 0.15) * 100
+        elif scan_topic == "tb3_2/scan":
+            self.reward3 = self.position3.x
+            reward = self.reward3 * 10 - abs(self.position3.y - 0.15) * 100
+        else:
+            print("&&&&&&&&&&&&&&&&")
 
         if done:
             rospy.loginfo("Collision!!")
@@ -229,31 +303,189 @@ class Env():
 
         return reward
 
+    def pid(self, goal_y, current_y):
+        error = goal_y - current_y
+        # print(error, goal_y, current_y)
+        p = 0.5
+        i = 0.1
+        d = 0.01
+        return error*p + (error/0.1)*d
+
+    def set_vel_cmd(self, vel_cmd, scan_topic):
+        if scan_topic == "tb3_0/scan":
+            self.cmd_vel1 = vel_cmd
+        elif scan_topic == "tb3_1/scan":
+            self.cmd_vel2 = vel_cmd
+        elif scan_topic == "tb3_2/scan":
+            self.cmd_vel3 = vel_cmd
+        else:
+            print("(((((((((((((((((((((((")
+
+    def set_ang_vel(self, ang_vel, scan_topic):
+        if scan_topic == "tb3_0/scan":
+            self.ang_vel1 = ang_vel
+        elif scan_topic == "tb3_1/scan":
+            self.ang_vel2 = ang_vel
+        elif scan_topic == "tb3_2/scan":
+            self.ang_vel3 = ang_vel
+        else:
+            print("(((((((((((((((((((((((")
+
+    def set_goal_y(self, goal_y, scan_topic):
+        if scan_topic == "tb3_0/scan":
+            self.goal_y1 = goal_y
+        elif scan_topic == "tb3_1/scan":
+            self.goal_y2 = goal_y
+        elif scan_topic == "tb3_2/scan":
+            self.goal_y3 = goal_y
+        else:
+            print("(((((((((((((((((((((((")
+
+    def straight(self, scan_topic):
+        self.set_vel_cmd(0.1, scan_topic)
+        self.set_ang_vel(0.0, scan_topic)
+        # self.set_goal_y(0.15, scan_topic)
+
+    def accelerate(self, scan_topic):
+        self.set_vel_cmd(0.15, scan_topic)
+        # self.set_goal_y(0.15, scan_topic)
+
+    def decelerate(self, scan_topic):
+        self.set_vel_cmd(0.05, scan_topic)
+        # self.set_goal_y(0.15, scan_topic)
+
+    def stop(self, scan_topic):
+        self.set_vel_cmd(0.0, scan_topic)
+        # self.set_goal_y(0.15, scan_topic)
+
+    def turn_left(self, scan_topic):
+        # self.set_vel_cmd(0.15, scan_topic)
+        self.set_goal_y(0.15, scan_topic)
+        self.set_ang_vel(-0.5, scan_topic)
+        # print(self.ang_vel2)
+
+    def turn_right(self, scan_topic):
+        # self.set_vel_cmd(0.15, scan_topic)
+        self.set_goal_y(-0.15, scan_topic)
+        self.set_ang_vel(0.5, scan_topic)
+
+    # def lane_change_left(self, scan_topic):
+    #     # print("tlqkfjldjkfdjfkdjf")
+    #     # self.set_vel_cmd(0.15, scan_topic)
+    #     if scan_topic == "tb3_0/scan":
+    #         if self.goal_y1 == -0.15:
+    #             while self.position1.y < 0:
+                   
+    #                 self.turn_left(scan_topic)
+    #             while self.position1.y < 0.15:
+    #                 self.turn_right(scan_topic)
+    #         else:
+    #             pass
+    #     elif scan_topic == "tb3_1/scan":
+    #         print("tlqkf", self.goal_y2, self.position2.y)
+    #         if self.goal_y2 == -0.15:
+    #             print("tlqkf")
+    #             while self.position2.y < 0:
+    #                 print("tlqkf444")
+    #                 self.turn_left(scan_topic)
+    #                 time.sleep(1)
+    #             while self.position2.y < 0.15:
+    #                 self.turn_right(scan_topic)
+    #         else:
+    #             print("tlqkf2")
+    #             pass
+    #     elif scan_topic == "tb3_2/scan":
+    #         if self.goal_y3 == -0.15:
+    #             while self.position3.y < 0:
+    #                 self.turn_left(scan_topic)
+    #             while self.position3.y < 0.15:
+    #                 self.turn_right(scan_topic)
+    #         else:
+    #             pass
+    #     else:
+    #         print("(((((((((((((((((((((((")
+        
+    # def lane_change_right(self, scan_topic):
+
+    #     if scan_topic == "tb3_0/scan":
+    #         if self.goal_y1 == 0.15:
+    #             while self.position1.y > 0:
+    #                 self.turn_right(scan_topic)
+    #             while self.position1.y > -0.15:
+    #                 self.turn_left(scan_topic)
+    #         else:
+    #             pass
+    #     elif scan_topic == "tb3_1/scan":
+    #         if self.goal_y2 == 0.15:
+    #             while self.position2.y > 0:
+    #                 self.turn_right(scan_topic)
+    #             while self.position2.y > -0.15:
+    #                 self.turn_left(scan_topic)
+    #         else:
+    #             pass
+    #     elif scan_topic == "tb3_2/scan":
+    #         if self.goal_y3 == 0.15:
+    #             while self.position3.y > 0:
+    #                 self.turn_right(scan_topic)
+    #             while self.position3.y > -0.15:
+    #                 self.turn_left(scan_topic)
+    #         else:
+    #             pass
+    #     else:
+    #         print("(((((((((((((((((((((((")
+
+    # def lane_change_left(self, scan_topic):
+    #     self.set_vel_cmd(0.15, scan_topic)
+    #     self.set_goal_y(0.15, scan_topic)
+    #     self.set_ang_vel(scan_topic)
+
+    # def lane_change_right(self, scan_topic):
+    #     self.set_vel_cmd(0.15, scan_topic)
+    #     self.set_goal_y(-0.15, scan_topic)
+    #     self.set_ang_vel(scan_topic)
+
     def step(self, action, scan_topic):
-        max_angular_vel = 1.5
-        ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
-        # actions = [self.straight, self.accelerate, self.decelerate, self.stop, self.lane_change_left, self.lane_change_right]
-        # vel_cmd_haya, ang_vel_haya = actions[action]()
+        max_angular_vel = 1.0 # 1.5
+        # ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
+        actions = [self.straight, self.accelerate, self.decelerate, self.stop, self.turn_left, self.turn_right]
+        actions[action](scan_topic)
         # print(action)
 
-        # if scan_topic == "tb3_0/scan":
-        #     ang_vel = ang_vel_haya + self.pid(0.15, self.position1.y)
-        #     print(self.pid(0.15, self.position1.y))
-        #     # print("1", ang_vel)
-        # elif scan_topic == "tb3_1/scan":
-        #     ang_vel = ang_vel_haya + self.pid(-0.15, self.position2.y)
-        #     # print("2", ang_vel)
-        # elif scan_topic == "tb3_2/scan":
-        #     ang_vel = ang_vel_haya + self.pid(0.15, self.position3.y)
-        #     # print("3", ang_vel)
-        # else:
-        #     print("tlqkf")
+        if scan_topic == "tb3_0/scan":
+            ang_vel = self.ang_vel1 + self.pid(self.goal_y1, self.position1.y)
+            # print(self.pid(0.15, self.position1.y))
+            # print("1", ang_vel)
+        elif scan_topic == "tb3_1/scan":
+            ang_vel = self.ang_vel2 + self.pid(self.goal_y2, self.position2.y)
+            # print("2", ang_vel)
+        elif scan_topic == "tb3_2/scan":
+            ang_vel = self.ang_vel3 + self.pid(self.goal_y3, self.position3.y)
+            # print("3", ang_vel)
+        else:
+            print("tlqkf")
+
+        # ang_vel = min(ang_vel, max_angular_vel)
+        # self.set_ang_vel(scan_topic)
+
+        # print(action)
 
         vel_cmd = Twist()
-        vel_cmd.linear.x = 0.15
-        vel_cmd.angular.z = ang_vel
-        # vel_cmd.linear.x = vel_cmd_haya
+        # vel_cmd.linear.x = 0.15
         # vel_cmd.angular.z = ang_vel
+
+        if scan_topic == "tb3_0/scan":
+            vel_cmd.linear.x = self.cmd_vel1
+            vel_cmd.angular.z = self.ang_vel1
+        elif scan_topic == "tb3_1/scan":
+            vel_cmd.linear.x = self.cmd_vel2
+            vel_cmd.angular.z = self.ang_vel2
+        elif scan_topic == "tb3_2/scan":
+            vel_cmd.linear.x = self.cmd_vel3
+            vel_cmd.angular.z = self.ang_vel3
+        else:
+            print("tlqkf")
+
+        # print(self.goal_y1, self.goal_y2, self.goal_y3)
 
         if scan_topic == "tb3_0/scan":
             self.pub_cmd_vel1.publish(vel_cmd)
@@ -270,6 +502,8 @@ class Env():
                 data = rospy.wait_for_message(scan_topic, LaserScan, timeout=5)
             except:
                 pass
+
+        time.sleep(0.1)
 
         state, done = self.getState(data, scan_topic)
         reward = self.setReward(state, done, action, scan_topic)

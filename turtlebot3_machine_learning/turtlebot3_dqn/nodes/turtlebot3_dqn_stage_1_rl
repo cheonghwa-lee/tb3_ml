@@ -27,7 +27,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from collections import deque
 from std_msgs.msg import Float32MultiArray
-from src.turtlebot3_dqn.environment_stage_1_haya import Env
+from src.turtlebot3_dqn.environment_stage_1_rl import Env
 from keras.models import Sequential, load_model
 from keras.optimizers import RMSprop
 from keras.layers import Dense, Dropout, Activation
@@ -52,7 +52,7 @@ class ReinforceAgent():
         self.discount_factor = 0.99
         self.learning_rate = 0.00025
         self.epsilon = 1.0 # 1.0
-        self.epsilon_decay = 0.99
+        self.epsilon_decay = 0.05 # 0.99
         self.epsilon_min = 0.05
         self.batch_size = 64
         self.train_start = 64
@@ -99,12 +99,14 @@ class ReinforceAgent():
         tlqkf1 = np.random.rand()
         # print(tlqkf1<= self.epsilon)
         if  tlqkf1 <= self.epsilon:
-            self.q_value = np.zeros(self.action_size)
-            return random.randrange(self.action_size)
+            # self.q_value = np.zeros(self.action_size)
+            # return random.randrange(self.action_size)
             # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.01,0.04,0.9,0.04,0.01])
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,1.0,0.0,0.0,0.0])
+            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,1.0,0.0])
+            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,0.0,1.0])
+            tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[0.8,0.1,0.04,0.04,0.01,0.01])
             # print(tlqkf)
-            # return tlqkf
+            return tlqkf
         else:
             q_value = self.model.predict(state.reshape(1, len(state)))
             self.q_value = q_value
@@ -180,8 +182,9 @@ if __name__ == '__main__':
     get_action2 = Float32MultiArray()
     get_action3 = Float32MultiArray()
 
-    state_size = 28
-    action_size = 5
+    state_size = 10
+    # action_size = 5
+    action_size = 6
 
     env = Env(action_size)
 
@@ -209,7 +212,14 @@ if __name__ == '__main__':
             action1 = agent1.getAction(state1)
             action2 = agent2.getAction(state2)
             action3 = agent3.getAction(state3)
+            action3 = 2
             # print(action1, action2)
+            state1[0] = action2
+            state1[1] = action3
+            state2[0] = action1
+            state2[1] = action3
+            state3[0] = action1
+            state3[1] = action2
 
             next_state1, reward1, done1 = env.step(action1, "tb3_0/scan")
             next_state2, reward2, done2 = env.step(action2, "tb3_1/scan")
@@ -315,8 +325,8 @@ if __name__ == '__main__':
                 rospy.loginfo("UPDATE TARGET NETWORK")
 
         if agent1.epsilon > agent1.epsilon_min:
-            agent1.epsilon *= agent1.epsilon_decay
+            agent1.epsilon -= agent1.epsilon_decay
         if agent2.epsilon > agent2.epsilon_min:
-            agent2.epsilon *= agent2.epsilon_decay
+            agent2.epsilon -= agent2.epsilon_decay
         if agent3.epsilon > agent3.epsilon_min:
-            agent3.epsilon *= agent3.epsilon_decay
+            agent3.epsilon -= agent3.epsilon_decay

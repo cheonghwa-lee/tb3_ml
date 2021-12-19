@@ -50,14 +50,14 @@ class Window(QMainWindow):
 
 
     def plot(self):
-        self.qValuePlt = pg.PlotWidget(self, title="Average max Q-value")
+        self.qValuePlt = pg.PlotWidget(self, title="Average max Q-value - 2")
         self.qValuePlt.move(0, 320)
         self.qValuePlt.resize(600, 300)
         self.timer1 = pg.QtCore.QTimer()
         self.timer1.timeout.connect(self.update)
         self.timer1.start(200)
 
-        self.rewardsPlt = pg.PlotWidget(self, title="Total reward")
+        self.rewardsPlt = pg.PlotWidget(self, title="Total reward - 2")
         self.rewardsPlt.move(0, 10)
         self.rewardsPlt.resize(600, 300)
 
