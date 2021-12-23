@@ -99,14 +99,15 @@ class ReinforceAgent():
         tlqkf1 = np.random.rand()
         # print(tlqkf1<= self.epsilon)
         if  tlqkf1 <= self.epsilon:
-            # self.q_value = np.zeros(self.action_size)
-            # return random.randrange(self.action_size)
+            self.q_value = np.zeros(self.action_size)
+            return random.randrange(self.action_size)
             # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.01,0.04,0.9,0.04,0.01])
             # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,1.0,0.0])
             # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,0.0,1.0])
-            tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[0.8,0.1,0.04,0.04,0.01,0.01])
+            # tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[0.8,0.05,0.05,0.08,0.01,0.01])
+            # tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[1.0,0.0,0.0,0.0,0.0,0.0])
             # print(tlqkf)
-            return tlqkf
+            # return tlqkf
         else:
             q_value = self.model.predict(state.reshape(1, len(state)))
             self.q_value = q_value
@@ -182,7 +183,7 @@ if __name__ == '__main__':
     get_action2 = Float32MultiArray()
     get_action3 = Float32MultiArray()
 
-    state_size = 10
+    state_size = 12
     # action_size = 5
     action_size = 6
 
@@ -209,18 +210,15 @@ if __name__ == '__main__':
         score2 = 0
         score3 = 0
         for t in range(agent1.episode_step):
-            action1 = agent1.getAction(state1)
             action2 = agent2.getAction(state2)
+            action2 = 1
             action3 = agent3.getAction(state3)
             action3 = 2
-            # print(action1, action2)
             state1[0] = action2
             state1[1] = action3
-            state2[0] = action1
-            state2[1] = action3
-            state3[0] = action1
-            state3[1] = action2
-
+            action1 = agent1.getAction(state1)
+            print(action1, action2, action3)
+            
             next_state1, reward1, done1 = env.step(action1, "tb3_0/scan")
             next_state2, reward2, done2 = env.step(action2, "tb3_1/scan")
             next_state3, reward3, done3 = env.step(action3, "tb3_2/scan")
@@ -291,11 +289,11 @@ if __name__ == '__main__':
                 # result.data = [score, (np.max(agent1.q_value) + np.max(agent2.q_value) + np.max(agent3.q_value)) / 3]
                 result1.data = [score1, np.max(agent1.q_value)]
                 result2.data = [score2, np.max(agent2.q_value)]
-                result3.data = [score2, np.max(agent3.q_value)]
+                result3.data = [score3, np.max(agent3.q_value)]
                 pub_result.publish(result)
                 pub_result1.publish(result1)
                 pub_result2.publish(result2)
-                pub_result2.publish(result3)
+                pub_result3.publish(result3)
                 agent1.updateTargetModel()
                 agent2.updateTargetModel()
                 agent3.updateTargetModel()

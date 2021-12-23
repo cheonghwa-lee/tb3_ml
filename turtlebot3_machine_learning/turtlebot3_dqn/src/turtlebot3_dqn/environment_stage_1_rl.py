@@ -213,13 +213,13 @@ class Env():
             self.get_goalbox = True
 
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
-        return [0, 0] + state_rl, done
+        return [0, 0] + state_rl + [heading, current_distance], done
 
     def setReward(self, state, done, action, scan_topic):
         yaw_reward = []
-        obstacle_min_range = state[-2]
-        current_distance = state[-3] # -1
-        heading = state[-4] # -2
+        # obstacle_min_range = state[-2]
+        current_distance = state[-1] # -1 # -3
+        heading = state[-2] # -2 # -4
 
         for i in range(5):
             angle = -pi / 4 + heading + (pi / 8 * i) + pi / 2
@@ -241,25 +241,30 @@ class Env():
         else:
             print("*********************")
 
-        if obstacle_min_range < 0.5:
-            ob_reward = -5
-        else:
-            ob_reward = 0
+        # if obstacle_min_range < 0.5:
+        #     ob_reward = -5
+        # else:
+        #     ob_reward = 0
 
         # reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
+        # reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) # + ob_reward
+        reward = distance_rate
         # print(reward)
 
         # reward = 10
 
         if scan_topic == "tb3_0/scan":
-            self.reward1 = self.position1.x
-            reward = self.reward1 * 10 - abs(self.position1.y - 0.15) * 100
+            # self.reward1 = self.position1.x
+            # reward = self.reward1 * 10 - abs(self.position1.y - self.goal_y1) * 100
+            reward -= abs(self.position1.y - self.goal_y1) * 100
         elif scan_topic == "tb3_1/scan":
-            self.reward2 = self.position2.x
-            reward = self.reward2 * 10 - abs(self.position3.y - 0.15) * 100
+            # self.reward2 = self.position2.x
+            # reward = self.reward2 * 10 - abs(self.position2.y - self.goal_y2) * 100
+            reward -= abs(self.position2.y - self.goal_y2) * 100
         elif scan_topic == "tb3_2/scan":
-            self.reward3 = self.position3.x
-            reward = self.reward3 * 10 - abs(self.position3.y - 0.15) * 100
+            # self.reward3 = self.position3.x
+            # reward = self.reward3 * 10 - abs(self.position3.y - self.goal_y3) * 100
+            reward -= abs(self.position3.y - self.goal_y3) * 100
         else:
             print("&&&&&&&&&&&&&&&&")
 
