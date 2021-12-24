@@ -211,7 +211,7 @@ if __name__ == '__main__':
         score3 = 0
         for t in range(agent1.episode_step):
             action2 = agent2.getAction(state2)
-            action2 = 1
+            action2 = 2# 1
             action3 = agent3.getAction(state3)
             action3 = 2
             state1[0] = action2
@@ -230,7 +230,7 @@ if __name__ == '__main__':
             reward1 = (next_px1 - px1) * 100 + reward1
             reward2 = (next_px2 - px2) * 100 + reward2
             reward3 = (next_px3 - px3) * 100 + reward3
-
+            
             agent1.appendMemory(state1, action1, reward1, next_state1, done1)
             agent2.appendMemory(state2, action2, reward2, next_state2, done2)
             agent3.appendMemory(state3, action3, reward3, next_state3, done3)

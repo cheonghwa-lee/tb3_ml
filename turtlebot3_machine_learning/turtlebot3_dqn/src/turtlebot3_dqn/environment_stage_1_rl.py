@@ -263,7 +263,7 @@ class Env():
         # reward = distance_rate
         # print(reward)
 
-        reward = 0
+        reward = 1
 
         # if scan_topic == "tb3_0/scan":
         #     # self.reward1 = self.position1.x
