@@ -43,6 +43,9 @@ class Env():
         self.position1 = Pose()
         self.position2 = Pose()
         self.position3 = Pose()
+        self._position1 = Pose()
+        self._position2 = Pose()
+        self._position3 = Pose()
         self.pub_cmd_vel1 = rospy.Publisher('tb3_0/cmd_vel', Twist, queue_size=5)
         self.sub_odom1 = rospy.Subscriber('tb3_0/odom', Odometry, self.getOdometry)
         self.pub_cmd_vel2 = rospy.Publisher('tb3_1/cmd_vel', Twist, queue_size=5)
@@ -78,10 +81,13 @@ class Env():
     def getOdometry(self, odom):
         if odom.header.frame_id == "tb3_0/odom":
             self.position1 = odom.pose.pose.position
+            self._position1 = odom.pose.pose.position
         elif odom.header.frame_id == "tb3_1/odom":
             self.position2 = odom.pose.pose.position
+            self._position2 = odom.pose.pose.position
         elif odom.header.frame_id == "tb3_2/odom":
             self.position3 = odom.pose.pose.position
+            self._position3 = odom.pose.pose.position
         else:
             print("rotlqkf")
 
@@ -166,6 +172,7 @@ class Env():
             x13 = self.position1.x - self.position3.x
             y13 = self.position1.y - self.position3.y
             h13 = self.heading1 - self.heading3
+            px = self.position1.x
             py = self.position1.y
             ph = self.heading1
             state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
@@ -176,6 +183,7 @@ class Env():
             x23 = self.position2.x - self.position3.x
             y23 = self.position2.y - self.position3.y
             h23 = self.heading2 - self.heading3
+            px = self.position2.x
             py = self.position2.y
             ph = self.heading2
             state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
@@ -186,6 +194,7 @@ class Env():
             x32 = self.position3.x - self.position2.x
             y32 = self.position3.y - self.position2.y
             h32 = self.heading3 - self.heading2
+            px = self.position3.x
             py = self.position3.y
             ph = self.heading3
             state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
@@ -213,7 +222,7 @@ class Env():
             self.get_goalbox = True
 
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
-        return [0, 0] + state_rl + [heading, current_distance], done
+        return [0, 0] + state_rl + [heading, current_distance], done, px
 
     def setReward(self, state, done, action, scan_topic):
         yaw_reward = []
@@ -229,17 +238,20 @@ class Env():
 
         # print(scan_topic)
 
-        if scan_topic == "tb3_0/scan":
-            # print('1')
-            distance_rate = 2 ** (current_distance / self.goal_distance1)
-        elif scan_topic == "tb3_1/scan":
-            # print('2')
-            distance_rate = 2 ** (current_distance / self.goal_distance2)
-        elif scan_topic == "tb3_2/scan":
-            # print('2')
-            distance_rate = 2 ** (current_distance / self.goal_distance3)
-        else:
-            print("*********************")
+        # if scan_topic == "tb3_0/scan":
+        #     # print('1')
+        #     # distance_rate = 2 ** (current_distance / self.goal_distance1)
+        #     reward = self.position1.x * 10
+        # elif scan_topic == "tb3_1/scan":
+        #     # print('2')
+        #     # distance_rate = 2 ** (current_distance / self.goal_distance2)
+        #     reward = self.position2.x * 10
+        # elif scan_topic == "tb3_2/scan":
+        #     # print('2')
+        #     # distance_rate = 2 ** (current_distance / self.goal_distance3)
+        #     reward = self.position3.x * 10 
+        # else:
+        #     print("*********************")
 
         # if obstacle_min_range < 0.5:
         #     ob_reward = -5
@@ -248,29 +260,29 @@ class Env():
 
         # reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
         # reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) # + ob_reward
-        reward = distance_rate
+        # reward = distance_rate
         # print(reward)
 
-        # reward = 10
+        reward = 0
 
-        if scan_topic == "tb3_0/scan":
-            # self.reward1 = self.position1.x
-            # reward = self.reward1 * 10 - abs(self.position1.y - self.goal_y1) * 100
-            reward -= abs(self.position1.y - self.goal_y1) * 100
-        elif scan_topic == "tb3_1/scan":
-            # self.reward2 = self.position2.x
-            # reward = self.reward2 * 10 - abs(self.position2.y - self.goal_y2) * 100
-            reward -= abs(self.position2.y - self.goal_y2) * 100
-        elif scan_topic == "tb3_2/scan":
-            # self.reward3 = self.position3.x
-            # reward = self.reward3 * 10 - abs(self.position3.y - self.goal_y3) * 100
-            reward -= abs(self.position3.y - self.goal_y3) * 100
-        else:
-            print("&&&&&&&&&&&&&&&&")
+        # if scan_topic == "tb3_0/scan":
+        #     # self.reward1 = self.position1.x
+        #     # reward = self.reward1 * 10 - abs(self.position1.y - self.goal_y1) * 100
+        #     reward -= abs(self.position1.y - self.goal_y1) * 100
+        # elif scan_topic == "tb3_1/scan":
+        #     # self.reward2 = self.position2.x
+        #     # reward = self.reward2 * 10 - abs(self.position2.y - self.goal_y2) * 100
+        #     reward -= abs(self.position2.y - self.goal_y2) * 100
+        # elif scan_topic == "tb3_2/scan":
+        #     # self.reward3 = self.position3.x
+        #     # reward = self.reward3 * 10 - abs(self.position3.y - self.goal_y3) * 100
+        #     reward -= abs(self.position3.y - self.goal_y3) * 100
+        # else:
+        #     print("&&&&&&&&&&&&&&&&")
 
         if done:
             rospy.loginfo("Collision!!")
-            reward = -200
+            reward = -20
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
@@ -510,12 +522,12 @@ class Env():
 
         time.sleep(0.1)
 
-        state, done = self.getState(data, scan_topic)
+        state, done, px = self.getState(data, scan_topic)
         reward = self.setReward(state, done, action, scan_topic)
 
         # print(self.position1.x, self.position1.y)
 
-        return np.asarray(state), reward, done
+        return np.asarray(state), reward, done, px
 
     def reset(self):
         rospy.wait_for_service('gazebo/reset_simulation')
@@ -555,8 +567,8 @@ class Env():
         # else:
             # print("))))))))))))")
 
-        state1, done1 = self.getState(data1, "tb3_0/scan")
-        state2, done2 = self.getState(data2, "tb3_1/scan")
-        state3, done3 = self.getState(data3, "tb3_2/scan")
+        state1, done1, px1 = self.getState(data1, "tb3_0/scan")
+        state2, done2, px2 = self.getState(data2, "tb3_1/scan")
+        state3, done3, px3 = self.getState(data3, "tb3_2/scan")
 
-        return np.asarray(state1), np.asarray(state2), np.asarray(state3)
+        return np.asarray(state1), np.asarray(state2), np.asarray(state3), px1, px2, px3

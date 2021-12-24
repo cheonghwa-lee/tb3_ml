@@ -52,7 +52,7 @@ class ReinforceAgent():
         self.discount_factor = 0.99
         self.learning_rate = 0.00025
         self.epsilon = 1.0 # 1.0
-        self.epsilon_decay = 0.05 # 0.99
+        self.epsilon_decay = 0.99 # 0.99
         self.epsilon_min = 0.05
         self.batch_size = 64
         self.train_start = 64
@@ -202,7 +202,7 @@ if __name__ == '__main__':
         done1 = False
         done2 = False
         done3 = False
-        state1, state2, state3 = env.reset()
+        state1, state2, state3, px1, px2, px3 = env.reset()
         # state1 = env.reset("tb3_0/scan")
         # state2 = env.reset("tb3_1/scan")
         score = 0
@@ -217,14 +217,19 @@ if __name__ == '__main__':
             state1[0] = action2
             state1[1] = action3
             action1 = agent1.getAction(state1)
-            print(action1, action2, action3)
+            # print(action1, action2, action3)
             
-            next_state1, reward1, done1 = env.step(action1, "tb3_0/scan")
-            next_state2, reward2, done2 = env.step(action2, "tb3_1/scan")
-            next_state3, reward3, done3 = env.step(action3, "tb3_2/scan")
+            next_state1, reward1, done1, next_px1 = env.step(action1, "tb3_0/scan")
+            next_state2, reward2, done2, next_px2 = env.step(action2, "tb3_1/scan")
+            next_state3, reward3, done3, next_px3 = env.step(action3, "tb3_2/scan")
             done = done1 or done2 or done3
             # print(done, done1, done2)
             # print(reward1, reward2)
+            print(px1, next_px1, reward1)
+
+            reward1 = (next_px1 - px1) * 100 + reward1
+            reward2 = (next_px2 - px2) * 100 + reward2
+            reward3 = (next_px3 - px3) * 100 + reward3
 
             agent1.appendMemory(state1, action1, reward1, next_state1, done1)
             agent2.appendMemory(state2, action2, reward2, next_state2, done2)
@@ -248,6 +253,9 @@ if __name__ == '__main__':
                 else:
                     agent3.trainModel(True)
 
+            # score1 += reward1
+            # score2 += reward2
+            # score3 += reward3
             score1 += reward1
             score2 += reward2
             score3 += reward3
@@ -256,6 +264,9 @@ if __name__ == '__main__':
             state1 = next_state1
             state2 = next_state2
             state3 = next_state3
+            px1 = next_px1
+            px2 = next_px2
+            px3 = next_px3
 
             get_action1.data = [action1, score1, reward1]
             get_action2.data = [action2, score2, reward2]
@@ -323,8 +334,8 @@ if __name__ == '__main__':
                 rospy.loginfo("UPDATE TARGET NETWORK")
 
         if agent1.epsilon > agent1.epsilon_min:
-            agent1.epsilon -= agent1.epsilon_decay
+            agent1.epsilon *= agent1.epsilon_decay
         if agent2.epsilon > agent2.epsilon_min:
-            agent2.epsilon -= agent2.epsilon_decay
+            agent2.epsilon *= agent2.epsilon_decay
         if agent3.epsilon > agent3.epsilon_min:
-            agent3.epsilon -= agent3.epsilon_decay
+            agent3.epsilon *= agent3.epsilon_decay
