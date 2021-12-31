@@ -377,13 +377,13 @@ class Env():
 
     def turn_left(self, scan_topic):
         # self.set_vel_cmd(0.15, scan_topic)
-        self.set_goal_y(0.15, scan_topic)
+        # self.set_goal_y(0.15, scan_topic) # -0.15
         self.set_ang_vel(-0.5, scan_topic)
         # print(self.ang_vel2)
 
     def turn_right(self, scan_topic):
         # self.set_vel_cmd(0.15, scan_topic)
-        self.set_goal_y(-0.15, scan_topic)
+        # self.set_goal_y(-0.15, scan_topic) # 0.15
         self.set_ang_vel(0.5, scan_topic)
 
     # def lane_change_left(self, scan_topic):

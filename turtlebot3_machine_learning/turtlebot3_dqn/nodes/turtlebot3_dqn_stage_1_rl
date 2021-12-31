@@ -211,7 +211,7 @@ if __name__ == '__main__':
         score3 = 0
         for t in range(agent1.episode_step):
             action2 = agent2.getAction(state2)
-            action2 = 2# 1
+            action2 = 1
             action3 = agent3.getAction(state3)
             action3 = 2
             state1[0] = action2

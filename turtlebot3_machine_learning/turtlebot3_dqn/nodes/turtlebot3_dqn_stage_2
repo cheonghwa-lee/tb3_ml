@@ -149,7 +149,7 @@ if __name__ == '__main__':
     get_action = Float32MultiArray()
 
     state_size = 28
-    action_size = 5
+    action_size = 1
 
     env = Env(action_size)
 

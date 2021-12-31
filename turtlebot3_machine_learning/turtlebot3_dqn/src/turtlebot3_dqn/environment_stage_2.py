@@ -119,13 +119,19 @@ class Env():
 
         return reward
 
+    def pid(self, current_y):
+        error = self.goal_y - current_y
+        k_p = 0.5
+        return error * k_p
+
     def step(self, action):
         max_angular_vel = 1.5
         ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
-
+        # print(action)
+        
         vel_cmd = Twist()
         vel_cmd.linear.x = 0.15
-        vel_cmd.angular.z = ang_vel
+        vel_cmd.angular.z = ang_vel + self.pid(self.position.y) # haya
         self.pub_cmd_vel.publish(vel_cmd)
 
         data = None
