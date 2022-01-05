@@ -229,7 +229,9 @@ class Env():
         exit3 = self.position3.y<-0.25 or self.position3.y>0.25
         exit_ = exit1 or exit2 or exit3
 
-        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_:
+        goal_done = self.position1.x > 5.0 # 22-01-05 
+
+        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_ or goal_done:
             done = True
         # print("scan_range: ", min(scan_range))
         if scan_topic == "tb3_0/scan":
@@ -241,10 +243,8 @@ class Env():
         else:
             print("&&&&&&&&&&&&&&&&")
 
-        goal_done = self.position1.x > 5.0 # 22-01-05 
-
         # if current_distance < 0.2:
-        if goal_done:
+        if current_distance < 0.2 or goal_done:
             print("tq!!!!!!!!goal!!!!!!!!!")
             self.get_goalbox = True
 
@@ -269,7 +269,7 @@ class Env():
             # print('1')
             # distance_rate = 2 ** (current_distance / self.goal_distance1)
             # reward = self.position1.x * 10
-            reward_y = self.position1.y - self.goal_y3
+            reward_y = self.position1.y - self.goal_y1
         elif scan_topic == "tb3_1/scan":
             # print('2')
             # distance_rate = 2 ** (current_distance / self.goal_distance2)
