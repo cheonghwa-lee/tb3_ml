@@ -211,12 +211,13 @@ if __name__ == '__main__':
         score3 = 0
         for t in range(agent1.episode_step):
             action2 = agent2.getAction(state2)
-            action2 = 1
+            action2 = 1 # 1
             action3 = agent3.getAction(state3)
-            action3 = 2
+            action3 = 2 # 2
             state1[0] = action2
             state1[1] = action3
             action1 = agent1.getAction(state1)
+            # action1 = 5 # 5 is turn_right, hard coding now
             # print(action1, action2, action3)
             
             next_state1, reward1, done1, next_px1 = env.step(action1, "tb3_0/scan")
@@ -225,7 +226,7 @@ if __name__ == '__main__':
             done = done1 or done2 or done3
             # print(done, done1, done2)
             # print(reward1, reward2)
-            print(px1, next_px1, reward1)
+            # print(px1, next_px1, reward1)
 
             reward1 = (next_px1 - px1) * 100 + reward1
             reward2 = (next_px2 - px2) * 100 + reward2

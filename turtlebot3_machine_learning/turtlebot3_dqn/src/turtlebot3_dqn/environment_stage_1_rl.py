@@ -17,6 +17,7 @@
 
 # Authors: Gilbert #
 
+from os import O_NOATIME
 import rospy
 import numpy as np
 import math
@@ -65,6 +66,9 @@ class Env():
         self.goal_y1 = 0.15
         self.goal_y2 = -0.15
         self.goal_y3 = 0.15
+        self.yaw1 = 0.0
+        self.yaw2 = 0.0
+        self.yaw3 = 0.0
 
     def getGoalDistace(self, scan_topic):
         if scan_topic == "tb3_0/scan":
@@ -91,9 +95,28 @@ class Env():
         else:
             print("rotlqkf")
 
-        orientation = odom.pose.pose.orientation
-        orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
-        _, _, yaw = euler_from_quaternion(orientation_list)
+        if odom.header.frame_id == "tb3_0/odom":
+            orientation = odom.pose.pose.orientation
+            orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
+            _, _, yaw = euler_from_quaternion(orientation_list)
+            self.yaw1 = yaw # by jm
+            # print("1: ", self.yaw1)
+        elif odom.header.frame_id == "tb3_1/odom":
+            orientation = odom.pose.pose.orientation
+            orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
+            _, _, yaw = euler_from_quaternion(orientation_list)
+            self.yaw2 = yaw # by jm
+            # print("2: ", self.yaw2)
+        elif odom.header.frame_id == "tb3_2/odom":
+            orientation = odom.pose.pose.orientation
+            orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
+            _, _, yaw = euler_from_quaternion(orientation_list)
+            self.yaw3 = yaw # by jm
+            # print("3: ", self.yaw3)
+        else:
+            print("##########################")
+        
+        # print(self.yaw1, self.yaw2, self.yaw3)
 
         if odom.header.frame_id == "tb3_0/odom":
             goal_angle = math.atan2(self.goal_y - self.position1.y, self.goal_x - self.position1.x)
@@ -218,7 +241,11 @@ class Env():
         else:
             print("&&&&&&&&&&&&&&&&")
 
-        if current_distance < 0.2:
+        goal_done = self.position1.x > 5.0 # 22-01-05 
+
+        # if current_distance < 0.2:
+        if goal_done:
+            print("tq!!!!!!!!goal!!!!!!!!!")
             self.get_goalbox = True
 
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
@@ -238,20 +265,23 @@ class Env():
 
         # print(scan_topic)
 
-        # if scan_topic == "tb3_0/scan":
-        #     # print('1')
-        #     # distance_rate = 2 ** (current_distance / self.goal_distance1)
-        #     reward = self.position1.x * 10
-        # elif scan_topic == "tb3_1/scan":
-        #     # print('2')
-        #     # distance_rate = 2 ** (current_distance / self.goal_distance2)
-        #     reward = self.position2.x * 10
-        # elif scan_topic == "tb3_2/scan":
-        #     # print('2')
-        #     # distance_rate = 2 ** (current_distance / self.goal_distance3)
-        #     reward = self.position3.x * 10 
-        # else:
-        #     print("*********************")
+        if scan_topic == "tb3_0/scan":
+            # print('1')
+            # distance_rate = 2 ** (current_distance / self.goal_distance1)
+            # reward = self.position1.x * 10
+            reward_y = self.position1.y - self.goal_y3
+        elif scan_topic == "tb3_1/scan":
+            # print('2')
+            # distance_rate = 2 ** (current_distance / self.goal_distance2)
+            # reward = self.position2.x * 10
+            reward_y = self.position2.y - self.goal_y2
+        elif scan_topic == "tb3_2/scan":
+            # print('2')
+            # distance_rate = 2 ** (current_distance / self.goal_distance3)
+            # reward = self.position3.x * 10 
+            reward_y = self.position3.y - self.goal_y3
+        else:
+            print("*********************")
 
         # if obstacle_min_range < 0.5:
         #     ob_reward = -5
@@ -263,7 +293,7 @@ class Env():
         # reward = distance_rate
         # print(reward)
 
-        reward = 1
+        reward = -1 - abs(reward_y)# 22-01-05
 
         # if scan_topic == "tb3_0/scan":
         #     # self.reward1 = self.position1.x
@@ -282,7 +312,7 @@ class Env():
 
         if done:
             rospy.loginfo("Collision!!")
-            reward = -20
+            reward = -20 # -200
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
@@ -317,16 +347,70 @@ class Env():
                 print("(((((((((((((((((((((((")
 
             self.get_goalbox = False
+            done = True # 22-01-05
 
         return reward
 
-    def pid(self, goal_y, current_y):
-        error = goal_y - current_y
+    def pid(self, goal_y): # deleted current_y 
+        # error = goal_y - current_y 
         # print(error, goal_y, current_y)
-        p = 0.5
-        i = 0.1
-        d = 0.01
-        return error*p + (error/0.1)*d
+        p = 1.0
+        i = 0.0
+        d = 0.0
+        y_g_pos = goal_y # let's check and just see the results
+        y_c_pos = self.position1.y
+        p_error = y_g_pos - y_c_pos
+        y_error = 0 - self.yaw1 # and i think we can skip the dimension change, ok
+        ang_error = math.atan2(p_error,0.3)
+        error = 1.5 * y_error + ang_error # is it right? thanks
+        # error = 1.5 * y_error + p_error
+        result = p * error
+        # print(result, error, p_error, y_error, ang_error)
+        # print(result, error, p_error, y_error)
+
+        if result < -0.001:
+            if result < -0.2:
+                if self.yaw1 < -pi/2:
+                    result = 0.0
+                else:
+                    result = -0.6
+        if result > 0.001:
+            if result > 0.2:
+                if self.yaw1 > pi/2:
+                    result = 0.0
+                else:
+                    result = 0.6
+        # if abs(p_error) > 0.05:
+        #     if self.yaw < -pi/3:
+        #         result = 0.0
+        #     else:
+        #         result = p_error * 2.0
+        # else:
+        #     result *= result
+        print(self.goal_y1)
+        return result # check this out together, ok
+
+    def pid_2(self, goal_y): # deleted current_y 
+        p = 1.0
+        y_g_pos = goal_y # let's check and just see the results
+        y_c_pos = self.position2.y
+        p_error = y_g_pos - y_c_pos
+        y_error = 0 - self.yaw2 # and i think we can skip the dimension change, ok
+        ang_error = math.atan2(p_error,0.3)
+        error = 1.5 * y_error + ang_error # is it right? thanks
+        result = p * error
+        return result # check this out together, ok
+
+    def pid_3(self, goal_y): # deleted current_y 
+        p = 1.0
+        y_g_pos = goal_y # let's check and just see the results
+        y_c_pos = self.position3.y
+        p_error = y_g_pos - y_c_pos
+        y_error = 0 - self.yaw3 # and i think we can skip the dimension change, ok
+        ang_error = math.atan2(p_error,0.3)
+        error = 1.5 * y_error + ang_error # is it right? thanks
+        result = p * error
+        return result # check this out together, ok
 
     def set_vel_cmd(self, vel_cmd, scan_topic):
         if scan_topic == "tb3_0/scan":
@@ -375,16 +459,16 @@ class Env():
         self.set_vel_cmd(0.0, scan_topic)
         # self.set_goal_y(0.15, scan_topic)
 
-    def turn_left(self, scan_topic):
+    def turn_left(self, scan_topic): # if turn left, current y is -0.15 and target y is 0.15
         # self.set_vel_cmd(0.15, scan_topic)
-        # self.set_goal_y(0.15, scan_topic) # -0.15
-        self.set_ang_vel(-0.5, scan_topic)
+        self.set_goal_y(0.15, scan_topic) # -0.15
+        # self.set_ang_vel(-0.5, scan_topic) #
         # print(self.ang_vel2)
 
-    def turn_right(self, scan_topic):
+    def turn_right(self, scan_topic): # we need to change here!
         # self.set_vel_cmd(0.15, scan_topic)
-        # self.set_goal_y(-0.15, scan_topic) # 0.15
-        self.set_ang_vel(0.5, scan_topic)
+        self.set_goal_y(-0.15, scan_topic) # 0.15
+        # self.set_ang_vel(0.5, scan_topic)
 
     # def lane_change_left(self, scan_topic):
     #     # print("tlqkfjldjkfdjfkdjf")
@@ -468,48 +552,54 @@ class Env():
         actions[action](scan_topic)
         # print(action)
 
-        if scan_topic == "tb3_0/scan":
-            ang_vel = self.ang_vel1 + self.pid(self.goal_y1, self.position1.y)
-            # print(self.pid(0.15, self.position1.y))
-            # print("1", ang_vel)
-        elif scan_topic == "tb3_1/scan":
-            ang_vel = self.ang_vel2 + self.pid(self.goal_y2, self.position2.y)
-            # print("2", ang_vel)
-        elif scan_topic == "tb3_2/scan":
-            ang_vel = self.ang_vel3 + self.pid(self.goal_y3, self.position3.y)
-            # print("3", ang_vel)
-        else:
-            print("tlqkf")
-
+        # if scan_topic == "tb3_0/scan":
+        #     ang_vel = self.ang_vel1 + self.pid(self.goal_y1) # i think it's not
+        #     # print(self.pid(0.15, self.position1.y))
+        #     # print("1", ang_vel)
+        # elif scan_topic == "tb3_1/scan":
+        #     ang_vel = self.ang_vel2 + self.pid(self.goal_y2)
+        #     # print("2", ang_vel)
+        # elif scan_topic == "tb3_2/scan":
+        #     ang_vel = self.ang_vel3 + self.pid(self.goal_y3) 
+        #     # print("3", ang_vel)
+        # else:
+        #     print("tlqkf")
+        
         # ang_vel = min(ang_vel, max_angular_vel)
         # self.set_ang_vel(scan_topic)
 
         # print(action)
 
-        vel_cmd = Twist()
+        vel_cmd1 = Twist()
+        vel_cmd2 = Twist()
+        vel_cmd3 = Twist()
         # vel_cmd.linear.x = 0.15
         # vel_cmd.angular.z = ang_vel
 
         if scan_topic == "tb3_0/scan":
-            vel_cmd.linear.x = self.cmd_vel1
-            vel_cmd.angular.z = self.ang_vel1
+            vel_cmd1.linear.x = self.cmd_vel1 
+            # vel_cmd.angular.z = self.ang_vel1
+            vel_cmd1.angular.z = self.pid(self.goal_y1) # here
+            # print(vel_cmd1.angular.z)
         elif scan_topic == "tb3_1/scan":
-            vel_cmd.linear.x = self.cmd_vel2
-            vel_cmd.angular.z = self.ang_vel2
+            vel_cmd2.linear.x = self.cmd_vel2
+            vel_cmd2.angular.z = self.pid_2(-0.15) # self.ang_vel2
+            # vel_cmd.angular.z = self.pid(self.goal_y2)
         elif scan_topic == "tb3_2/scan":
-            vel_cmd.linear.x = self.cmd_vel3
-            vel_cmd.angular.z = self.ang_vel3
+            vel_cmd3.linear.x = self.cmd_vel3
+            vel_cmd3.angular.z = self.pid_3(0.15) # self.ang_vel3 
+            # vel_cmd.angular.z = self.pid(self.goal_y3)
         else:
             print("tlqkf")
 
         # print(self.goal_y1, self.goal_y2, self.goal_y3)
 
         if scan_topic == "tb3_0/scan":
-            self.pub_cmd_vel1.publish(vel_cmd)
+            self.pub_cmd_vel1.publish(vel_cmd1)
         elif scan_topic == "tb3_1/scan":
-            self.pub_cmd_vel2.publish(vel_cmd)
+            self.pub_cmd_vel2.publish(vel_cmd2)
         elif scan_topic == "tb3_2/scan":
-            self.pub_cmd_vel3.publish(vel_cmd)
+            self.pub_cmd_vel3.publish(vel_cmd3)
         else:
             print("tlqkf")
 
