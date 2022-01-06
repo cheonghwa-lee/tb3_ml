@@ -216,6 +216,12 @@ class Env():
             y12 = round(self.position1.y - self.position2.y, 2)
             h12 = round(self.heading1 - self.heading2, 2)
             x13 = round(self.position1.x - self.position3.x, 2)
+            if x13 > 1.0:
+                x13 = 1.0
+            elif x13 < -1.0:
+                x13 = -1.0
+            else:
+                pass
             y13 = round(self.position1.y - self.position3.y, 2)
             h13 = round(self.heading1 - self.heading3, 2)
             px = self.position1.x
