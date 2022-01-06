@@ -215,7 +215,7 @@ if __name__ == '__main__':
 
         state_size = 12
         # action_size = 5
-        action_size = 10
+        action_size = 7
 
         env = Env(action_size)
 

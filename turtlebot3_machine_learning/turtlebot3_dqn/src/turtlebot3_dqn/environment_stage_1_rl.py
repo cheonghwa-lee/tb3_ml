@@ -504,18 +504,20 @@ class Env():
     #     self.set_goal_y(-0.15, scan_topic) # 0.15
     #     # self.set_ang_vel(0.5, scan_topic)
 
-    def straight_h(self, scan_topic):
-        self.set_vel_cmd(0.15, scan_topic)
-        # self.set_ang_vel(0.0, scan_topic)
+    ###############################################################################################
 
-    def straight_m(self, scan_topic):
-        self.set_vel_cmd(0.1, scan_topic)
-        # self.set_ang_vel(0.0, scan_topic)
+    # def straight_h(self, scan_topic):
+    #     self.set_vel_cmd(0.15, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
 
-    def straight_l(self, scan_topic):
-        self.set_vel_cmd(0.05, scan_topic)
-        # self.set_ang_vel(0.0, scan_topic)
-        # self.set_goal_y(0.15, scan_topic)
+    # def straight_m(self, scan_topic):
+    #     self.set_vel_cmd(0.1, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
+
+    # def straight_l(self, scan_topic):
+    #     self.set_vel_cmd(0.05, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
+    #     # self.set_goal_y(0.15, scan_topic)
 
     def turn_left_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
@@ -630,7 +632,7 @@ class Env():
         max_angular_vel = 1.0 # 1.5
         # ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
         # actions = [self.straight, self.accelerate, self.decelerate, self.stop, self.turn_left, self.turn_right]
-        actions = [self.straight_h, self.straight_m, self.straight_l, self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop]
+        actions = [self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop]
         actions[action](scan_topic)
         # print(action)
 
