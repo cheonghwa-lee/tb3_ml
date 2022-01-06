@@ -63,9 +63,9 @@ class Env():
         self.ang_vel1 = 0
         self.ang_vel2 = 0
         self.ang_vel3 = 0
-        self.goal_y1 = 0.15
-        self.goal_y2 = -0.15
-        self.goal_y3 = 0.15
+        self.goal_y1 = 0.175
+        self.goal_y2 = -0.175
+        self.goal_y3 = 0.175
         self.yaw1 = 0.0
         self.yaw2 = 0.0
         self.yaw3 = 0.0
@@ -277,9 +277,9 @@ class Env():
         # if current_distance < 0.2 or goal_done: # 22-01-05 
             print("tq!!!!!!!!goal!!!!!!!!!")
             self.get_goalbox = True
-
+        # print(len(scan_range))
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
-        return [0, 0] + state_rl + [round(heading, 2), round(current_distance, 2)], done, px
+        return state_rl + [round(heading, 2), round(current_distance, 2)], done, px # [0, 0]
 
     def setReward(self, state, done, action, scan_topic):
         yaw_reward = []
@@ -342,12 +342,12 @@ class Env():
 
         if done:
             rospy.loginfo("Collision!!")
-            if self.position1.x > 5.0:
-                print("goooooood")
-                reward = 200
-            else:
-                print("baaaaaaaaaaaad")
-                reward = -20 # -200
+            # if self.position1.x > 5.0:
+            #     print("goooooood")
+            #     reward = 200
+            # else:
+            #     print("baaaaaaaaaaaad")
+            reward = -20 # -200
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
@@ -522,36 +522,53 @@ class Env():
     def turn_left_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.15, scan_topic)
+        self.set_goal_y(0.175, scan_topic)
 
     def turn_left_m(self, scan_topic):
         self.set_vel_cmd(0.1, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.15, scan_topic)
+        self.set_goal_y(0.175, scan_topic)
 
     def turn_left_l(self, scan_topic):
         self.set_vel_cmd(0.05, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.15, scan_topic)
+        self.set_goal_y(0.175, scan_topic)
 
     def turn_right_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.15, scan_topic)
+        self.set_goal_y(-0.175, scan_topic)
 
     def turn_right_m(self, scan_topic):
         self.set_vel_cmd(0.1, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.15, scan_topic)
+        self.set_goal_y(-0.175, scan_topic)
 
     def turn_right_l(self, scan_topic):
         self.set_vel_cmd(0.05, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.15, scan_topic)
+        self.set_goal_y(-0.175, scan_topic)
 
     def stop(self, scan_topic):
         self.set_vel_cmd(0.0, scan_topic)
         # self.set_goal_y(0.15, scan_topic)
+
+    # def back_l(self, scan_topic):
+    #     self.set_vel_cmd(-0.05, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
+    #     # self.set_goal_y(0.15, scan_topic)
+
+    # def back_left_l(self, scan_topic):
+    #     self.set_vel_cmd(-0.05, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
+    #     self.set_goal_y(0.15, scan_topic)
+
+    # def back_right_l(self, scan_topic):
+    #     self.set_vel_cmd(-0.05, scan_topic)
+    #     # self.set_ang_vel(0.0, scan_topic)
+    #     self.set_goal_y(-0.15, scan_topic)
+
+    ##############################################################################
 
     # def lane_change_left(self, scan_topic):
     #     # print("tlqkfjldjkfdjfkdjf")
@@ -633,6 +650,7 @@ class Env():
         # ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
         # actions = [self.straight, self.accelerate, self.decelerate, self.stop, self.turn_left, self.turn_right]
         actions = [self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop]
+        # actions = [self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop, self.back_l, self.back_left_l, self.back_right_l]
         actions[action](scan_topic)
         # print(action)
 
@@ -667,11 +685,11 @@ class Env():
             # print(vel_cmd1.angular.z)
         elif scan_topic == "tb3_1/scan":
             vel_cmd2.linear.x = self.cmd_vel2
-            vel_cmd2.angular.z = self.pid_2(-0.15) # self.ang_vel2
+            vel_cmd2.angular.z = self.pid_2(-0.175) # self.ang_vel2
             # vel_cmd.angular.z = self.pid(self.goal_y2)
         elif scan_topic == "tb3_2/scan":
             vel_cmd3.linear.x = self.cmd_vel3
-            vel_cmd3.angular.z = self.pid_3(0.15) # self.ang_vel3 
+            vel_cmd3.angular.z = self.pid_3(0.175) # self.ang_vel3 
             # vel_cmd.angular.z = self.pid(self.goal_y3)
         else:
             print("tlqkf")
