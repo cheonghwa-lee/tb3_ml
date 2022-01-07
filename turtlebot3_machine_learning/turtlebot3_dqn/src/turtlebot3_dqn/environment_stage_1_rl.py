@@ -278,7 +278,7 @@ class Env():
 
         goal_done = self.position1.x > 5.0 # 22-01-05 
 
-        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_ :
+        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_ or goal_done:
             # done = True
             if scan_topic == "tb3_0/scan":
                 done = True
@@ -377,7 +377,7 @@ class Env():
 
         if done or self.done:
             rospy.loginfo("Collision!!")
-            reward = -200
+            reward = -1 # -200
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
@@ -389,7 +389,7 @@ class Env():
 
         if self.get_goalbox or self.goal:
             rospy.loginfo("Goal!!")
-            reward = 200
+            reward = 100
 
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
