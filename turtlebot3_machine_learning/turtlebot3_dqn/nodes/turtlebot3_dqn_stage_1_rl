@@ -213,9 +213,9 @@ if __name__ == '__main__':
         get_action2 = Float32MultiArray()
         get_action3 = Float32MultiArray()
 
-        state_size = 10 # 12
+        state_size = 6 # 12
         # action_size = 5
-        action_size = 7
+        action_size = 9
 
         env = Env(action_size)
 
@@ -241,11 +241,12 @@ if __name__ == '__main__':
             score3 = 0
             for t in range(agent1.episode_step):
                 action2 = agent2.getAction(state2)
-                action2 = 4 # 1
+                action2 = 6 # 1
                 action3 = agent3.getAction(state3)
-                action3 = 2 # 2
-                state1[0] = action2
-                state1[1] = action3
+                action3 = 3 # 2
+                # state1[0] = action2
+                # state1[1] = action3
+                print(state1)
                 action1 = agent1.getAction(state1)
                 # action1 = 5 # 5 is turn_right, hard coding now
                 # print(action1, action2, action3)

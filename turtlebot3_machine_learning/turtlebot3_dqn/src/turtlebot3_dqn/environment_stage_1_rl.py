@@ -227,7 +227,8 @@ class Env():
             px = self.position1.x
             py = round(self.position1.y, 2)
             ph = round(self.heading1, 2)
-            state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
+            # state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
+            state_rl = [py, ph, x12, y12, x13, y13] # 22-01-07
             print(state_rl)
         elif scan_topic == "tb3_1/scan":
             x21 = round(self.position2.x - self.position1.x, 2)
@@ -239,7 +240,8 @@ class Env():
             px = self.position2.x
             py = round(self.position2.y, 2)
             ph = round(self.heading2, 2)
-            state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
+            # state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
+            state_rl = [py, ph, x21, y21, x23, y23]
         elif scan_topic == "tb3_2/scan":
             x31 = round(self.position3.x - self.position1.x, 2)
             y31 = round(self.position3.y - self.position1.y, 2)
@@ -250,7 +252,8 @@ class Env():
             px = self.position3.x
             py = round(self.position3.y, 2)
             ph = round(self.heading3, 2)
-            state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
+            # state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
+            state_rl = [py, ph, x31, y31, x32, y32]
         else:
             print("&&&&&&&&&&&&&&&&")
 
@@ -279,7 +282,7 @@ class Env():
             self.get_goalbox = True
         # print(len(scan_range))
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
-        return state_rl + [round(heading, 2), round(current_distance, 2)], done, px # [0, 0]
+        return state_rl , done, px # [0, 0] + [round(heading, 2), round(current_distance, 2)]
 
     def setReward(self, state, done, action, scan_topic):
         yaw_reward = []
@@ -323,7 +326,7 @@ class Env():
         # reward = distance_rate
         # print(reward)
 
-        reward = -1 - abs(reward_y) # 22-01-05
+        reward = -1 # - abs(reward_y) # 22-01-05
 
         # if scan_topic == "tb3_0/scan":
         #     # self.reward1 = self.position1.x
@@ -519,6 +522,11 @@ class Env():
     #     # self.set_ang_vel(0.0, scan_topic)
     #     # self.set_goal_y(0.15, scan_topic)
 
+    def turn_left_f(self, scan_topic):
+        self.set_vel_cmd(0.20, scan_topic)
+        # self.set_ang_vel(0.0, scan_topic)
+        self.set_goal_y(0.175, scan_topic)
+
     def turn_left_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
@@ -533,6 +541,11 @@ class Env():
         self.set_vel_cmd(0.05, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
         self.set_goal_y(0.175, scan_topic)
+
+    def turn_right_f(self, scan_topic):
+        self.set_vel_cmd(0.20, scan_topic)
+        # self.set_ang_vel(0.0, scan_topic)
+        self.set_goal_y(-0.175, scan_topic)
 
     def turn_right_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
@@ -649,7 +662,7 @@ class Env():
         max_angular_vel = 1.0 # 1.5
         # ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
         # actions = [self.straight, self.accelerate, self.decelerate, self.stop, self.turn_left, self.turn_right]
-        actions = [self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop]
+        actions = [self.turn_left_f, self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_f, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop]
         # actions = [self.turn_left_h, self.turn_left_m, self.turn_left_l, self.turn_right_h, self.turn_right_m, self.turn_right_l, self.stop, self.back_l, self.back_left_l, self.back_right_l]
         actions[action](scan_topic)
         # print(action)
