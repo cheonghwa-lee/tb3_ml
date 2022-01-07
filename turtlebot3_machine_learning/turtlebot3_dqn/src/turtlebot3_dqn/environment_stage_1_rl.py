@@ -69,6 +69,8 @@ class Env():
         self.yaw1 = 0.0
         self.yaw2 = 0.0
         self.yaw3 = 0.0
+        self.done = False
+        self.goal = False
 
     def getGoalDistace(self, scan_topic):
         if scan_topic == "tb3_0/scan":
@@ -175,6 +177,18 @@ class Env():
 
         min_range = 0.13 # 0.13
         done = False
+        # self.done = False
+        # self.goal = False
+        if scan_topic == "tb3_0/scan":
+            
+            self.done = False
+            self.goal = False
+        elif scan_topic == "tb3_1/scan":
+            pass
+        elif scan_topic == "tb3_2/scan":
+            pass
+        else:
+            pass
 
         # print(scan_topic, scan.ranges)
         for i in range(len(scan.ranges)):
@@ -264,8 +278,18 @@ class Env():
 
         goal_done = self.position1.x > 5.0 # 22-01-05 
 
-        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_ or goal_done:
-            done = True
+        if (min_range > min(scan_range) > 0) or distance_between < 0.21 or exit_ :
+            # done = True
+            if scan_topic == "tb3_0/scan":
+                done = True
+                self.done = True
+            elif scan_topic == "tb3_1/scan":
+                pass
+            elif scan_topic == "tb3_2/scan":
+                pass
+            else:
+                pass
+            
         # print("scan_range: ", min(scan_range))
         if scan_topic == "tb3_0/scan":
             current_distance = round(math.hypot(self.goal_x - self.position1.x, self.goal_y - self.position1.y),2)
@@ -276,10 +300,18 @@ class Env():
         else:
             print("&&&&&&&&&&&&&&&&")
 
-        if current_distance < 0.2:
+        if current_distance < 0.2 or goal_done:
         # if current_distance < 0.2 or goal_done: # 22-01-05 
             print("tq!!!!!!!!goal!!!!!!!!!")
-            self.get_goalbox = True
+            if scan_topic == "tb3_0/scan":
+                self.get_goalbox = True
+                self.goal = True
+            elif scan_topic == "tb3_1/scan":
+                pass
+            elif scan_topic == "tb3_2/scan":
+                pass
+            else:
+                pass
         # print(len(scan_range))
         # return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
         return state_rl , done, px # [0, 0] + [round(heading, 2), round(current_distance, 2)]
@@ -343,14 +375,9 @@ class Env():
         # else:
         #     print("&&&&&&&&&&&&&&&&")
 
-        if done:
+        if done or self.done:
             rospy.loginfo("Collision!!")
-            # if self.position1.x > 5.0:
-            #     print("goooooood")
-            #     reward = 200
-            # else:
-            #     print("baaaaaaaaaaaad")
-            reward = -20 # -200
+            reward = -200
             if scan_topic == "tb3_0/scan":
                 self.pub_cmd_vel1.publish(Twist())
             elif scan_topic == "tb3_1/scan":
@@ -358,9 +385,9 @@ class Env():
             elif scan_topic == "tb3_2/scan":
                 self.pub_cmd_vel3.publish(Twist())
             else:
-                print("77777777777777777777")
+                pass
 
-        if self.get_goalbox:
+        if self.get_goalbox or self.goal:
             rospy.loginfo("Goal!!")
             reward = 200
 
@@ -371,9 +398,9 @@ class Env():
             elif scan_topic == "tb3_2/scan":
                 self.pub_cmd_vel3.publish(Twist())
             else:
-                print("888888888888")
+                pass
 
-            self.goal_x, self.goal_y = self.respawn_goal.getPosition(True, delete=True)
+            # self.goal_x, self.goal_y = self.respawn_goal.getPosition(True, delete=True) # 22-01-07
 
             if scan_topic == "tb3_0/scan":
                 self.goal_distance1 = self.getGoalDistace(scan_topic)
@@ -382,11 +409,11 @@ class Env():
             elif scan_topic == "tb3_2/scan":
                 self.goal_distance3 = self.getGoalDistace(scan_topic)
             else:
-                print("(((((((((((((((((((((((")
+                pass
 
             self.get_goalbox = False
             # done = True # 22-01-05
-        # print(reward)
+        # print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2") # 22-01-07
         return reward
 
     def pid(self, goal_y): # deleted current_y 

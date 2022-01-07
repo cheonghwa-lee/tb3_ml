@@ -248,10 +248,12 @@ if __name__ == '__main__':
                 # state1[1] = action3
                 print(state1)
                 action1 = agent1.getAction(state1)
+                # action1 = 0
                 # action1 = 5 # 5 is turn_right, hard coding now
                 # print(action1, action2, action3)
                 
                 next_state1, reward1, done1, next_px1 = env.step(action1, "tb3_0/scan")
+                # time.sleep(0.1)
                 next_state2, reward2, done2, next_px2 = env.step(action2, "tb3_1/scan")
                 next_state3, reward3, done3, next_px3 = env.step(action3, "tb3_2/scan")
                 done = done1 or done2 or done3
@@ -260,7 +262,7 @@ if __name__ == '__main__':
                 # print(px1, next_px1, reward1)
                 # print(next_state1)
 
-                reward1 = (next_px1 - px1) * 100 + reward1
+                reward1 = (next_px1 - px1) * 100 + reward1 ################################
                 reward2 = (next_px2 - px2) * 100 + reward2
                 reward3 = (next_px3 - px3) * 100 + reward3
                 
@@ -369,11 +371,8 @@ if __name__ == '__main__':
 
                     # except:
                     #     traceback.print_exc()
-                    print('done1123')
                     pub_result2.publish(result2)
-                    print('done1123-1')
                     pub_result3.publish(result3)
-                    print('done1123-2')
                     agent1.updateTargetModel()
                     agent2.updateTargetModel()
                     agent3.updateTargetModel()
@@ -381,7 +380,6 @@ if __name__ == '__main__':
                     episodes.append(e)
                     m, s = divmod(int(time.time() - start_time), 60)
                     h, m = divmod(m, 60)
-                    print('done1124')
                     # rospy.loginfo('Ep: %d score: %.2f memory: %d epsilon: %.2f time: %d:%02d:%02d',
                     #               e, score, h, m, s)
                     rospy.loginfo('Ep: %d score: %.2f memory: %d epsilon: %.2f time: %d:%02d:%02d',
@@ -397,7 +395,6 @@ if __name__ == '__main__':
                     param_dictionary1 = dict(zip(param_keys, param_values1))
                     param_dictionary2 = dict(zip(param_keys, param_values2))
                     param_dictionary3 = dict(zip(param_keys, param_values3))
-                    print('done1125')
                     break
                 
                 global_step += 1
@@ -410,7 +407,6 @@ if __name__ == '__main__':
                 agent2.epsilon *= agent2.epsilon_decay
             if agent3.epsilon > agent3.epsilon_min:
                 agent3.epsilon *= agent3.epsilon_decay
-        print('done1123')
     except:
         ch_consumer_thread.stop()
         consumer_queue.put('exit') 
