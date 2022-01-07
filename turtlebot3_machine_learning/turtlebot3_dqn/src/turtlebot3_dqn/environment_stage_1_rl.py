@@ -63,9 +63,9 @@ class Env():
         self.ang_vel1 = 0
         self.ang_vel2 = 0
         self.ang_vel3 = 0
-        self.goal_y1 = 0.175
-        self.goal_y2 = -0.175
-        self.goal_y3 = 0.175
+        self.goal_y1 = 0.15
+        self.goal_y2 = -0.15
+        self.goal_y3 = 0.15
         self.yaw1 = 0.0
         self.yaw2 = 0.0
         self.yaw3 = 0.0
@@ -227,8 +227,8 @@ class Env():
             px = self.position1.x
             py = round(self.position1.y, 2)
             ph = round(self.heading1, 2)
-            # state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
-            state_rl = [py, ph, x12, y12, x13, y13] # 22-01-07
+            state_rl = [py, ph, x12, y12, h12, x13, y13, h13]
+            # state_rl = [py, ph, x12, y12, x13, y13] # 22-01-07
             print(state_rl)
         elif scan_topic == "tb3_1/scan":
             x21 = round(self.position2.x - self.position1.x, 2)
@@ -240,8 +240,8 @@ class Env():
             px = self.position2.x
             py = round(self.position2.y, 2)
             ph = round(self.heading2, 2)
-            # state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
-            state_rl = [py, ph, x21, y21, x23, y23]
+            state_rl = [py, ph, x21, y21, h21, x23, y23, h23]
+            # state_rl = [py, ph, x21, y21, x23, y23]
         elif scan_topic == "tb3_2/scan":
             x31 = round(self.position3.x - self.position1.x, 2)
             y31 = round(self.position3.y - self.position1.y, 2)
@@ -252,8 +252,8 @@ class Env():
             px = self.position3.x
             py = round(self.position3.y, 2)
             ph = round(self.heading3, 2)
-            # state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
-            state_rl = [py, ph, x31, y31, x32, y32]
+            state_rl = [py, ph, x31, y31, h31, x32, y32, h32]
+            # state_rl = [py, ph, x31, y31, x32, y32]
         else:
             print("&&&&&&&&&&&&&&&&")
 
@@ -525,42 +525,42 @@ class Env():
     def turn_left_f(self, scan_topic):
         self.set_vel_cmd(0.20, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.175, scan_topic)
+        self.set_goal_y(0.15, scan_topic)
 
     def turn_left_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.175, scan_topic)
+        self.set_goal_y(0.15, scan_topic)
 
     def turn_left_m(self, scan_topic):
         self.set_vel_cmd(0.1, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.175, scan_topic)
+        self.set_goal_y(0.15, scan_topic)
 
     def turn_left_l(self, scan_topic):
         self.set_vel_cmd(0.05, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(0.175, scan_topic)
+        self.set_goal_y(0.15, scan_topic)
 
     def turn_right_f(self, scan_topic):
         self.set_vel_cmd(0.20, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.175, scan_topic)
+        self.set_goal_y(-0.15, scan_topic)
 
     def turn_right_h(self, scan_topic):
         self.set_vel_cmd(0.15, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.175, scan_topic)
+        self.set_goal_y(-0.15, scan_topic)
 
     def turn_right_m(self, scan_topic):
         self.set_vel_cmd(0.1, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.175, scan_topic)
+        self.set_goal_y(-0.15, scan_topic)
 
     def turn_right_l(self, scan_topic):
         self.set_vel_cmd(0.05, scan_topic)
         # self.set_ang_vel(0.0, scan_topic)
-        self.set_goal_y(-0.175, scan_topic)
+        self.set_goal_y(-0.15, scan_topic)
 
     def stop(self, scan_topic):
         self.set_vel_cmd(0.0, scan_topic)
@@ -698,11 +698,11 @@ class Env():
             # print(vel_cmd1.angular.z)
         elif scan_topic == "tb3_1/scan":
             vel_cmd2.linear.x = self.cmd_vel2
-            vel_cmd2.angular.z = self.pid_2(-0.175) # self.ang_vel2
+            vel_cmd2.angular.z = self.pid_2(-0.15) # self.ang_vel2
             # vel_cmd.angular.z = self.pid(self.goal_y2)
         elif scan_topic == "tb3_2/scan":
             vel_cmd3.linear.x = self.cmd_vel3
-            vel_cmd3.angular.z = self.pid_3(0.175) # self.ang_vel3 
+            vel_cmd3.angular.z = self.pid_3(0.15) # self.ang_vel3 
             # vel_cmd.angular.z = self.pid(self.goal_y3)
         else:
             print("tlqkf")
