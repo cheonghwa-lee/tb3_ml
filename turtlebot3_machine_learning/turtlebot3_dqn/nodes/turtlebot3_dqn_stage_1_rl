@@ -44,13 +44,6 @@ consumer_queue = queue.Queue(2048)
 
 try:
     print('start thread')
-    print('start thread')
-    print('start thread')
-    print('start thread')
-    print('start thread')
-    print('start thread')
-    print('start thread')
-
     ch_consumer_thread = ch_consumer.ChConsumer(consumer_queue)
     ch_consumer_thread.start()
 except:
@@ -58,12 +51,8 @@ except:
     print(sys.exc_info()[0])
     sys.exit(1)
 
-
-
-# from random import choices
-
 EPISODES = 3000
-METRIC_NAME = "tb3_rl_learning"
+METRIC_NAME = "ubuntu_A"
 
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
@@ -125,36 +114,16 @@ class ReinforceAgent():
         self.target_model.set_weights(self.model.get_weights())
 
     def getAction(self, state):
-        tlqkf1 = np.random.rand()
-        # print(tlqkf1<= self.epsilon)
-        if  tlqkf1 <= self.epsilon:
+        rand = np.random.rand()
+        if  rand <= self.epsilon:
             self.q_value = np.zeros(self.action_size)
             return random.randrange(self.action_size)
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.01,0.04,0.9,0.04,0.01])
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,1.0,0.0])
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,0.0,0.0,1.0])
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[0.8,0.05,0.05,0.08,0.01,0.01])
-            # tlqkf = np.random.choice([0, 1, 2, 3, 4, 5], p=[1.0,0.0,0.0,0.0,0.0,0.0])
-            # print(tlqkf)
-            # return tlqkf
+            # rand_choice = np.random.choice([0, 1, 2, 3, 4, 5], p=[1.0,0.0,0.0,0.0,0.0,0.0])
+            # return rand_choice
         else:
             q_value = self.model.predict(state.reshape(1, len(state)))
             self.q_value = q_value
             return np.argmax(q_value[0])
-
-    # def getAction(self, state):
-    #     tlqkf1 = np.random.rand()
-    #     # print(tlqkf1<= self.epsilon)
-    #     if  tlqkf1 <= self.epsilon:
-    #         # self.q_value = np.zeros(self.action_size)
-    #         # return random.randrange(self.action_size)
-    #         tlqkf = np.random.choice([0, 1, 2, 3, 4], p=[0.0,0.0,1.0,0.0,0.0])
-    #         # print(tlqkf)
-    #         return tlqkf
-    #     else:
-    #         q_value = self.model.predict(state.reshape(1, len(state)))
-    #         self.q_value = q_value
-    #         return np.argmax(q_value[0])
 
     def appendMemory(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -208,13 +177,11 @@ if __name__ == '__main__':
         result1 = Float32MultiArray()
         result2 = Float32MultiArray()
         result3 = Float32MultiArray()
-        # get_action = Float32MultiArray()
         get_action1 = Float32MultiArray()
         get_action2 = Float32MultiArray()
         get_action3 = Float32MultiArray()
 
-        state_size = 8 # 12
-        # action_size = 5
+        state_size = 9 # 12
         action_size = 9
 
         env = Env(action_size)
@@ -233,8 +200,6 @@ if __name__ == '__main__':
             done2 = False
             done3 = False
             state1, state2, state3, px1, px2, px3 = env.reset()
-            # state1 = env.reset("tb3_0/scan")
-            # state2 = env.reset("tb3_1/scan")
             score = 0
             score1 = 0
             score2 = 0
@@ -246,23 +211,15 @@ if __name__ == '__main__':
                 action3 = 3 # 2
                 # state1[0] = action2
                 # state1[1] = action3
-                print(state1)
                 action1 = agent1.getAction(state1)
-                # action1 = 0
-                # action1 = 5 # 5 is turn_right, hard coding now
-                # print(action1, action2, action3)
-                
+                print(state1)
+
                 next_state1, reward1, done1, next_px1 = env.step(action1, "tb3_0/scan")
-                # time.sleep(0.1)
                 next_state2, reward2, done2, next_px2 = env.step(action2, "tb3_1/scan")
                 next_state3, reward3, done3, next_px3 = env.step(action3, "tb3_2/scan")
                 done = done1 or done2 or done3
-                # print(done, done1, done2)
-                # print(reward1, reward2)
-                # print(px1, next_px1, reward1)
-                # print(next_state1)
 
-                reward1 = (next_px1 - px1) * 100 + reward1 ################################
+                reward1 = (next_px1 - px1) * 100 + reward1 #
                 reward2 = (next_px2 - px2) * 100 + reward2
                 reward3 = (next_px3 - px3) * 100 + reward3
                 
@@ -288,13 +245,10 @@ if __name__ == '__main__':
                     else:
                         agent3.trainModel(True)
 
-                # score1 += reward1
-                # score2 += reward2
-                # score3 += reward3
                 score1 += reward1
                 score2 += reward2
                 score3 += reward3
-                score = score1 + score2 + score3 # important
+                score = score1 + score2 + score3 # 
 
                 state1 = next_state1
                 state2 = next_state2
@@ -333,7 +287,6 @@ if __name__ == '__main__':
                 if done:
                     print(e)
                     list_json = []
-                    # time.sleep(1)
                     # result.data = [score, (np.max(agent1.q_value) + np.max(agent2.q_value) + np.max(agent3.q_value)) / 3]
                     result1.data = [score1, np.max(agent1.q_value)]
                     result2.data = [score2, np.max(agent2.q_value)]
@@ -363,14 +316,12 @@ if __name__ == '__main__':
                     }
                     list_json.append(json_data_formet)
 
-                    # try:
-                    #     #print(json.dumps(list_json))
+                    try:
+                        #print(json.dumps(list_json))
+                        consumer_queue.put(json.dumps(list_json)) 
+                    except:
+                        traceback.print_exc()
 
-
-                    #     consumer_queue.put(json.dumps(list_json)) 
-
-                    # except:
-                    #     traceback.print_exc()
                     pub_result2.publish(result2)
                     pub_result3.publish(result3)
                     agent1.updateTargetModel()
