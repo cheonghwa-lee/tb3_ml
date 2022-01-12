@@ -31,6 +31,10 @@ from src.turtlebot3_dqn.environment_stage_1_rl import Env
 from keras.models import Sequential, load_model
 from keras.optimizers import RMSprop
 from keras.layers import Dense, Dropout, Activation
+
+import pandas as pd
+import csv
+
 import sys
 try:
     import queue
@@ -51,8 +55,8 @@ except:
     print(sys.exc_info()[0])
     sys.exit(1)
 
-EPISODES = 3000
-METRIC_NAME = "ubuntu_A"
+EPISODES = 500
+METRIC_NAME = "ubuntu_A_2"
 
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
@@ -93,7 +97,6 @@ class ReinforceAgent():
         dropout = 0.2
 
         model.add(Dense(64, input_shape=(self.state_size,), activation='relu', kernel_initializer='lecun_uniform'))
-
         model.add(Dense(64, activation='relu', kernel_initializer='lecun_uniform'))
         model.add(Dropout(dropout))
 
@@ -316,11 +319,19 @@ if __name__ == '__main__':
                     }
                     list_json.append(json_data_formet)
 
-                    try:
-                        #print(json.dumps(list_json))
-                        consumer_queue.put(json.dumps(list_json)) 
-                    except:
-                        traceback.print_exc()
+                    # try:
+                    #     #print(json.dumps(list_json))
+                    #     consumer_queue.put(json.dumps(list_json)) 
+                    # except:
+                    #     traceback.print_exc()
+
+                    # dataframe = pd.DataFrame(result1.data)
+                    # print(result1.data)
+                    # dataframe.to_csv("/home/rtos-ubuntu/tlqkf.csv", header=False, index=True)
+
+                    with open('/home/rtos-ubuntu/tlqkf.csv', 'a') as myfile:
+                        wr = csv.writer(myfile)
+                        wr.writerow(result1.data)
 
                     pub_result2.publish(result2)
                     pub_result3.publish(result3)
