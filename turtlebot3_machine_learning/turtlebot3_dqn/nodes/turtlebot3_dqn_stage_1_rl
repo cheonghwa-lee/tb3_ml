@@ -55,8 +55,9 @@ except:
     print(sys.exc_info()[0])
     sys.exit(1)
 
-EPISODES = 500
+EPISODES = 505
 METRIC_NAME = "ubuntu_A_2"
+FIENAME = '/home/rtos-ubuntu/ubuntu_A_123.csv'
 
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
@@ -324,16 +325,11 @@ if __name__ == '__main__':
                     #     consumer_queue.put(json.dumps(list_json)) 
                     # except:
                     #     traceback.print_exc()
-
-                    # dataframe = pd.DataFrame(result1.data)
-                    # print(result1.data)
-                    # dataframe.to_csv("/home/rtos-ubuntu/tlqkf.csv", header=False, index=True)
-                    
-                    TLQKF = '/home/rtos-ubuntu/ubuntu_A_111.csv'
-                    if os.path.isfile(TLQKF) == False:
-                        open(TLQKF, 'w')
-                    with open(TLQKF, 'a') as myfile:
-                        wr = csv.writer(myfile)
+            
+                    if os.path.isfile(FIENAME) == False:
+                        open(FIENAME, 'w')
+                    with open(FIENAME, 'a') as f:
+                        wr = csv.writer(f)
                         wr.writerow(result1.data)
 
                     pub_result2.publish(result2)
