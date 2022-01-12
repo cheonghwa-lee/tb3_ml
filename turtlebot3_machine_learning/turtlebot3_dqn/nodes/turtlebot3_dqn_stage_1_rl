@@ -328,8 +328,11 @@ if __name__ == '__main__':
                     # dataframe = pd.DataFrame(result1.data)
                     # print(result1.data)
                     # dataframe.to_csv("/home/rtos-ubuntu/tlqkf.csv", header=False, index=True)
-
-                    with open('/home/rtos-ubuntu/tlqkf.csv', 'a') as myfile:
+                    
+                    TLQKF = '/home/rtos-ubuntu/ubuntu_A_111.csv'
+                    if os.path.isfile(TLQKF) == False:
+                        open(TLQKF, 'w')
+                    with open(TLQKF, 'a') as myfile:
                         wr = csv.writer(myfile)
                         wr.writerow(result1.data)
 
