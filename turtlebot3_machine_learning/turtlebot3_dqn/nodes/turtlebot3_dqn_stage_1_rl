@@ -57,7 +57,11 @@ except:
 
 EPISODES = 505
 METRIC_NAME = "ubuntu_A_2"
-FIENAME = '/home/rtos-ubuntu/ubuntu_A_123.csv'
+
+import datetime
+now = datetime.datetime.now()
+current_time = now.strftime("%H:%M:%S")
+FIENAME = '/home/rtos-ubuntu/Result_Data/ubuntu_A_' + current_time + '.csv'
 
 class ReinforceAgent():
     def __init__(self, state_size, action_size):
@@ -210,9 +214,9 @@ if __name__ == '__main__':
             score3 = 0
             for t in range(agent1.episode_step):
                 action2 = agent2.getAction(state2)
-                action2 = 5 # 1
+                action2 = 5 # 5
                 action3 = agent3.getAction(state3)
-                action3 = 3 # 2
+                action3 = 3 # 3
                 # state1[0] = action2
                 # state1[1] = action3
                 action1 = agent1.getAction(state1)
